@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MROC Problem Management Overview</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* SAP Horizon theme: Morning Horizon (light) / Evening Horizon (dark) */
+:root{
+  --font:"72","72full",Arial,Helvetica,sans-serif;
+  --bg:#f5f6f7;--shell:#ffffff;--card:#ffffff;--ink:#1d2d3e;--muted:#556b82;--line:#d5dadd;--field:#ffffff;--field-line:#89919a;
+  --th:#eff1f2;--rowalt:#fafafa;--rowhover:#eaf3ff;--brand:#0070f2;--brand-ink:#ffffff;--brand-soft:#eaf3ff;
+  --pos:#107e3e;--crit:#e9730c;--neg:#bb0000;--info:#0070f2;
+  --pos-bg:#f5fae5;--crit-bg:#fff8d6;--neg-bg:#ffeaf4;--info-bg:#d1efff;
+  --pos-b:#256f3a;--crit-b:#c35500;--neg-b:#aa0808;--info-b:#0057d2;
+  --shadow:0 0 0 .0625rem rgba(85,107,129,.25),0 .125rem .5rem rgba(85,107,129,.16)}
+[data-theme="dark"]{
+  --bg:#12171c;--shell:#1d232a;--card:#1d232a;--ink:#eaecee;--muted:#a9b4be;--line:#3b4754;--field:#12171c;--field-line:#7b8794;
+  --th:#2a323b;--rowalt:#212830;--rowhover:#263a52;--brand:#4da2ff;--brand-ink:#0b1b2e;--brand-soft:#1f3550;
+  --pos:#5dc122;--crit:#ffa24d;--neg:#ff7b7b;--info:#4da2ff;
+  --pos-bg:#1e3320;--crit-bg:#3a2e14;--neg-bg:#3d1c24;--info-bg:#17304a;
+  --pos-b:#5dc122;--crit-b:#ffa24d;--neg-b:#ff7b7b;--info-b:#4da2ff;
+  --shadow:0 0 0 .0625rem rgba(0,0,0,.4),0 .125rem .5rem rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);font-size:14px;color:var(--ink);background:var(--bg);min-height:100vh}
+.shell{background:var(--shell);height:56px;padding:0 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;box-shadow:0 .125rem .25rem rgba(85,107,129,.12)}
+.sap-logo{display:flex;align-items:center;height:32px}.sap-logo svg{height:32px;width:auto;display:block}
+.shell .sep{width:1px;height:28px;background:var(--line)}
+.shell h1{margin:0;font-size:16px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shell .grow{flex:1}
+#themeBtn{background:transparent;color:var(--brand);border:1px solid var(--brand);padding:0 14px;height:32px;border-radius:8px;font-weight:700}
+#themeBtn:hover{background:var(--brand-soft)}
+main{max-width:1500px;margin:auto;padding:24px}
+.pagehead{margin:0 0 16px}.pagehead h2{margin:0 0 4px;font-size:24px;font-weight:700}.pagehead p{margin:0;color:var(--muted);font-size:14px}
+.card,.panel,.kpi,.filters,.tablepanel{background:var(--card);border-radius:16px;box-shadow:var(--shadow)}
+.filters{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr)) 1.5fr auto;gap:16px;padding:16px 20px;margin-bottom:16px;align-items:end}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+select,input{width:100%;height:36px;border:1px solid var(--field-line);padding:0 12px;border-radius:8px;background:var(--field);color:var(--ink);font:inherit;outline:none}
+select option{background:var(--field);color:var(--ink)}
+select:hover,input:hover{border-color:var(--brand)}select:focus,input:focus{outline:2px solid var(--brand);outline-offset:1px}
+.actions{display:flex;gap:8px}
+button{height:36px;border:1px solid var(--brand);background:var(--brand);color:var(--brand-ink);padding:0 16px;border-radius:8px;cursor:pointer;font:inherit;font-weight:700}
+button:hover{filter:brightness(1.1)}button.secondary{background:transparent;color:var(--brand)}button.secondary:hover{background:var(--brand-soft)}
+.sectiontitle{font-size:16px;font-weight:700;margin:24px 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.kpi{padding:20px 24px;border-top:4px solid var(--brand)}
+.kpi .label{font-size:14px;font-weight:700}
+.kpi .value{font-size:44px;font-weight:300;line-height:1.15;margin:6px 0 2px}
+.kpi .sub{font-size:12px;color:var(--muted)}
+.kpi:nth-child(1){border-top-color:var(--info)}.kpi:nth-child(1) .value{color:var(--info)}
+.kpi:nth-child(2){border-top-color:var(--pos)}.kpi:nth-child(2) .value{color:var(--pos)}
+.kpi:nth-child(3){border-top-color:var(--crit)}.kpi:nth-child(3) .value{color:var(--crit)}
+.kpi:nth-child(4){border-top-color:var(--neg)}.kpi:nth-child(4) .value{color:var(--neg)}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.panel{padding:20px 24px;min-height:340px}.panel.wide{grid-column:1/-1}
+.panel h2{font-size:16px;font-weight:700;margin:0 0 2px}
+.panel .hint{font-size:12px;color:var(--muted);margin:0 0 14px}
+.canvaswrap{height:270px;position:relative}
+.tablepanel{padding:20px 24px;margin-bottom:16px}
+.tablehead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.tablehead h2{margin:0;font-size:16px;font-weight:700}
+.tablewrap{overflow:auto;max-height:500px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th{position:sticky;top:0;background:var(--th);color:var(--ink);text-align:left;padding:11px 14px;z-index:2;font-weight:700;font-size:12px;border-bottom:1px solid var(--line)}
+td{padding:10px 14px;border-bottom:1px solid var(--line)}
+tr:nth-child(even) td{background:var(--rowalt)}tr:hover td{background:var(--rowhover)}
+.num{text-align:center}th.num{text-align:center}
+.total-row td{font-weight:700;border-top:2px solid var(--brand);background:var(--brand-soft)!important}
+.status-pill{display:inline-flex;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid}
+.status-resolved{background:var(--pos-bg);color:var(--pos-b);border-color:var(--pos-b)}
+.status-progress{background:var(--crit-bg);color:var(--crit-b);border-color:var(--crit-b)}
+.status-rca{background:var(--neg-bg);color:var(--neg-b);border-color:var(--neg-b)}
+.open-list{list-style:none;margin:0;padding:0}
+.open-list li{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.open-list li:last-child{border:0}.open-list .rm{color:var(--muted);flex:1 1 320px}
+.foot{color:var(--muted);font-size:12px;padding:16px 4px;text-align:center}
+@media(max-width:1100px){.filters{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}}
+@media(max-width:600px){.filters,.kpis{grid-template-columns:1fr}.shell{padding:0 12px}.shell h1{font-size:13px}main{padding:12px}}
+
+/* Navy-black SAP variant */
+[data-theme="light"]{--bg:#eef1f7;--ink:#0a1128;--muted:#5b6785;--line:#d9deeb;--th:#0a1128;--rowhover:#e9eefb;--brand:#0a1128;--brand-soft:#e6eaf4;--info:#13224f;--info-b:#13224f;--pos:#1e3a8a;--pos-b:#1e3a8a;--pos-bg:#dbe4ff;--shadow:0 4px 20px rgba(10,17,40,.08),0 0 0 1px #d9deeb}
+.shell{background:linear-gradient(135deg,#02040b,#0a1128 55%,#13224f);border-bottom:1px solid #13224f}
+.shell h1{color:#fff}.shell .sep{background:rgba(255,255,255,.3)}
+#themeBtn{color:#fff;border-color:rgba(255,255,255,.6)}#themeBtn:hover{background:rgba(255,255,255,.14)}
+[data-theme="light"] th{background:#0a1128;color:#fff}
+[data-theme="light"] .kpi:nth-child(3) .value{color:#d97706}
+.ticker{display:flex;align-items:center;background:#0a1128;color:#e6edff;height:38px;overflow:hidden;font-size:13px;border-bottom:1px solid #13224f}
+.ticker .tl{flex:none;background:#0070f2;color:#fff;font-weight:700;padding:0 16px;height:100%;display:flex;align-items:center;z-index:1}
+.tk-win{flex:1;overflow:hidden}
+.tk-track{display:flex;width:max-content;animation:tk 60s linear infinite}.tk-track:hover{animation-play-state:paused}
+.tk-run{display:flex;flex:none}.tk{white-space:nowrap;padding:0 28px;position:relative}.tk::after{content:"\25CF";position:absolute;right:-4px;color:#0070f2;font-size:8px;top:50%;transform:translateY(-50%)}
+.tk b{color:#7cc4ff}
+@keyframes tk{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.tk-track{animation:none}.tk-win{overflow:auto}}
+.insights{margin:12px 0 0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink)}.insights li::marker{color:var(--brand)}
+[data-theme="dark"] .insights li::marker{color:var(--info)}
+
+[hidden]{display:none!important}
+[id^="sec-"]{scroll-margin-top:72px}
+.pagehead{display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.ph-actions{margin-top:14px;display:flex;gap:8px}
+.hero{width:300px;height:132px;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:#0a1128;flex:none}
+.hero img,.hero svg{width:100%;height:100%;object-fit:cover;display:block}
+.mb{position:relative;display:inline-block}
+.mbtn{display:inline-flex;align-items:center;gap:8px}
+.caret{width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px)}
+.mbtn[aria-expanded="true"] .caret{transform:rotate(-135deg) translate(-2px,-2px)}
+.menu{position:absolute;top:calc(100% + 4px);left:0;min-width:210px;background:var(--card);border-radius:12px;box-shadow:0 0 0 1px rgba(85,107,129,.3),0 8px 24px rgba(10,17,40,.22);padding:6px;z-index:40}
+.menu.right{left:auto;right:0}
+.menu button{display:block;width:100%;text-align:left;background:transparent;border:0;color:var(--ink);font-weight:400;border-radius:8px;height:36px;padding:0 12px}
+.menu button:hover,.menu button:focus{background:var(--brand-soft);outline:none;filter:none}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+.kpi{cursor:pointer;transition:transform .15s}.kpi:hover{transform:translateY(-2px)}.kpi:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.kpi .more{font-size:12px;font-weight:700;color:var(--brand);margin-top:8px}
+[data-theme="dark"] .kpi .more{color:var(--info)}
+tbody tr{cursor:pointer}
+.dlg-back{position:fixed;inset:0;background:rgba(13,20,30,.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:var(--card);color:var(--ink);border-radius:16px;box-shadow:0 0 0 1px rgba(85,107,129,.3),0 16px 48px rgba(0,0,0,.35);width:min(860px,100%);max-height:88vh;display:flex;flex-direction:column}
+.dlg-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dlg-h h3{margin:0;font-size:18px}
+.dlg .x{height:32px;width:32px;padding:0;border-radius:50%;background:transparent;color:var(--ink);border:0;font-size:20px}
+.dlg-b{padding:16px 20px;overflow:auto}
+.dlg-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin:0}
+.kv div.full{grid-column:1/-1}.kv dt{font-size:12px;color:var(--muted);margin-bottom:2px}.kv dd{margin:0;font-weight:600}
+@media(max-width:600px){.hero{width:100%}.kv{grid-template-columns:1fr}}
+@media print{.ticker,#themeBtn,.mb,.filters,.ph-actions{display:none!important}.panel,.kpi{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="shell">
+  <a class="sap-logo" aria-label="SAP" href="#"><svg viewBox="0 0 412 204" role="img" aria-label="SAP logo"><defs><linearGradient id="sapg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00b8f1"/><stop offset=".5" stop-color="#0a8fdc"/><stop offset="1" stop-color="#0070c0"/></linearGradient></defs><polygon points="0,0 412,0 206,204 0,204" fill="url(#sapg)"/><text x="12" y="140" font-family="Arial Black,Arial,Helvetica,sans-serif" font-weight="900" font-size="118" letter-spacing="-2" fill="#fff" textLength="290" lengthAdjust="spacingAndGlyphs">SAP</text></svg></a>
+  <span class="sep"></span>
+  <h1>MROC Problem Management Overview</h1>
+  <span class="grow"></span>
+  <button id="themeBtn" class="secondary" onclick="toggleTheme()">Evening Horizon</button>
+</header>
+<div class="ticker"><div class="tl">Open items</div><div class="tk-win" id="ticker"></div></div>
+<main>
+<div class="pagehead">
+  <div class="ph-text">
+    <h2>MROC Problem Management Overview</h2>
+    <p>Meeting Room Problem Records &bull; Status, Monthly Progress, Regional Exposure &amp; Recurring Rooms</p>
+    <div class="ph-actions">
+      <div class="mb">
+        <button class="secondary mbtn" aria-haspopup="menu" aria-expanded="false" onclick="toggleMenu(this)">Go to<span class="caret"></span></button>
+        <div class="menu" role="menu" hidden>
+          <button role="menuitem" onclick="go('sec-charts')">Charts</button>
+          <button role="menuitem" onclick="go('sec-month')">Month-wise details</button>
+          <button role="menuitem" onclick="go('sec-open')">Open items</button>
+          <button role="menuitem" onclick="go('sec-records')">Record details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero">
+    <img src="dashboard-image.png" alt="MROC meeting room" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <svg style="display:none" viewBox="0 0 300 132" role="img" aria-label="Meeting room illustration"><defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#02040b"/><stop offset=".6" stop-color="#0a1128"/><stop offset="1" stop-color="#13224f"/></linearGradient></defs><rect width="300" height="132" fill="url(#hg)"/><rect x="95" y="18" width="110" height="52" rx="4" fill="#0070f2"/><rect x="100" y="23" width="100" height="42" rx="2" fill="#7cc4ff" opacity=".35"/><ellipse cx="150" cy="100" rx="78" ry="16" fill="#e6edff"/><g fill="#7cc4ff"><circle cx="82" cy="104" r="8"/><circle cx="218" cy="104" r="8"/><circle cx="120" cy="120" r="8"/><circle cx="180" cy="120" r="8"/></g></svg>
+  </div>
+</div>
+
+<section class="filters">
+  <div><label for="region">Region</label>
+    <select id="region"><option value="">All Regions</option><option>AMER</option><option>APJ</option><option>EMEA</option><option>GERMANY</option></select></div>
+  <div><label for="assignee">Owner</label>
+    <select id="assignee"><option value="">All Owners</option><option>Ganesh K Prabhu</option><option>Kyabarsi Archana</option><option>Pallavaraj M S</option></select></div>
+  <div><label for="state">Problem State</label>
+    <select id="state"><option value="">All States</option><option>Resolved</option><option>Fix in Progress</option><option>Pending (RCA)</option></select></div>
+  <div><label for="search">Search Records</label>
+    <input id="search" placeholder="ID, description, building&hellip;"></div>
+  <div class="actions"><button onclick="render()">Go</button><button class="secondary" onclick="resetFilters()">Reset</button></div>
+</section>
+
+<section class="kpis">
+  <div class="kpi"><div class="label">Total Tracked Issues</div><div class="value" id="kTotal">0</div><div class="sub">Active &amp; resolved problem records</div><div class="more">View records &rsaquo;</div></div>
+  <div class="kpi"><div class="label">Resolved</div><div class="value" id="kResolved">0</div><div class="sub">Problem records resolved</div><div class="more">View records &rsaquo;</div></div>
+  <div class="kpi"><div class="label">Fix in Progress</div><div class="value" id="kInProgress">0</div><div class="sub">Active engineering remediation</div><div class="more">View records &rsaquo;</div></div>
+  <div class="kpi"><div class="label">Pending RCA</div><div class="value" id="kRca">0</div><div class="sub">Root-cause analysis awaiting review</div><div class="more">View records &rsaquo;</div></div>
+</section>
+
+<section class="charts" id="sec-charts">
+  <div class="panel"><h2>Problem Breakdown by State</h2><p class="hint">Share of records in each state</p><div class="canvaswrap"><canvas id="stateChart"></canvas></div><ul class="insights" id="in_stateChart"></ul></div>
+  <div class="panel"><h2>Active Exposure by Region</h2><p class="hint">Resolved vs open records per region</p><div class="canvaswrap"><canvas id="regionChart"></canvas></div><ul class="insights" id="in_regionChart"></ul></div>
+  <div class="panel wide"><h2>Monthly Status: Resolved, Fix in Progress &amp; Pending</h2><p class="hint">Records grouped by the month they were created</p><div class="canvaswrap"><canvas id="monthStatusChart"></canvas></div><ul class="insights" id="in_monthStatusChart"></ul></div>
+  <div class="panel wide" id="sec-month"><h2>Month-wise Status Details</h2><p class="hint">Count of records per month in each state</p>
+    <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Month</th><th class="num">Resolved</th><th class="num">Fix in Progress</th><th class="num">Pending (RCA)</th><th class="num">Total</th></tr></thead><tbody id="monthBody"></tbody></table></div></div>
+  <div class="panel"><h2>Monthly Problem Volume Trend</h2><p class="hint">Total new Problem Records per month</p><div class="canvaswrap"><canvas id="monthChart"></canvas></div><ul class="insights" id="in_monthChart"></ul></div>
+  <div class="panel"><h2>Issue Distribution by Owner</h2><p class="hint">Records assigned per owner</p><div class="canvaswrap"><canvas id="ownerChart"></canvas></div><ul class="insights" id="in_ownerChart"></ul></div>
+  <div class="panel wide"><h2>Recurring Meeting Room Problem Records</h2><p class="hint" id="recurHint"></p><div class="canvaswrap" id="recurWrap"><canvas id="recurChart"></canvas></div><ul class="insights" id="in_recurChart"></ul></div>
+  <div class="panel wide" id="sec-open" style="min-height:0"><h2>Open Items Needing Attention</h2><p class="hint">Fix in Progress and Pending (RCA) records with latest remarks</p><ul class="open-list" id="openList"></ul></div>
+</section>
+
+<section class="tablepanel" id="sec-records">
+  <div class="tablehead"><h2>Problem Record Details</h2>
+    <div><span id="rowCount" style="font-weight:700;color:var(--muted)"></span> &nbsp; <div class="mb"><button class="mbtn" aria-haspopup="menu" aria-expanded="false" onclick="toggleMenu(this)">Actions<span class="caret"></span></button><div class="menu right" role="menu" hidden><button role="menuitem" onclick="act('csv')">Export CSV</button><button role="menuitem" onclick="act('print')">Print / Save as PDF</button><hr><button role="menuitem" onclick="act('reset')">Reset filters</button></div></div></div></div>
+  <div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</section>
+<div class="foot">MROC Problem Management Overview &bull; Data source: Problem Management details.xlsx</div>
+</main>
+
+<div class="dlg-back" id="dlg" hidden></div>
+<script>
+const DATA = [
+ {
+  "Sl.No": 1,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0117567",
+  "Issue Description": "MROC - OTX issue in MR BER01 A05.28 (6) (Video) (Alternative Workspace)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-05-12",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 2,
+  "Region": "AMER",
+  "Building Code": "BUE04",
+  "Problem Record": "PRB0117863",
+  "Issue Description": "MROC - OTX issue in MR BUE04 2.162 (4) (Video, BYOD) (Vendimia)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-05-14",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 3,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0118457",
+  "Issue Description": "MROC - OTX issue in MR BER01 B02.23 (4) (Video) (Meeting Seating)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-05-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 4,
+  "Region": "EMEA",
+  "Building Code": "DUB02",
+  "Problem Record": "PRB0118382",
+  "Issue Description": "MROC - OTX issue in MR DUB02 02.05 (10) (Video) (Shannon)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-05-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 5,
+  "Region": "EMEA",
+  "Building Code": "DXB06",
+  "Problem Record": "PRB0118428",
+  "Issue Description": "MROC - OTX issue in MR DXB06 2.8 (12) (Video, Collab) (Egypt - External)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-05-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 6,
+  "Region": "AMER",
+  "Building Code": "VAN03",
+  "Problem Record": "PRB0118490",
+  "Issue Description": "MROC - OTX issue in MR VAN03 1.B640 (6) (Video) (Granville Island)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-05-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 7,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0118506",
+  "Issue Description": "MROC - OTX issue in MR BER01 B02.27 (4) (Video) (Meeting Seating)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-05-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 8,
+  "Region": "EMEA",
+  "Building Code": "CPT01",
+  "Problem Record": "PRB0119075",
+  "Issue Description": "MROC - OTX issue in MR CPT01 0.3 (12) (Video, Collab) (Colombard)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-05-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 9,
+  "Region": "APJ",
+  "Building Code": "BLR01",
+  "Problem Record": "PRB0119728",
+  "Issue Description": "MROC - OTX issue in MR BLR01 C1.R19 (8) (Video) (Nashik)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-05-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 10,
+  "Region": "AMER",
+  "Building Code": "MIN85",
+  "Problem Record": "PRB0119833",
+  "Issue Description": "MROC - OTX issue in MR MIN85 8R26 (10) (Video) (Hennepin)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-05-26",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 11,
+  "Region": "APJ",
+  "Building Code": "PVG03",
+  "Problem Record": "PRB0120069",
+  "Issue Description": "MROC - OTX issue in MR PVG03 D2.1 (8) (Video) (Meeting Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-05-27",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 12,
+  "Region": "EMEA",
+  "Building Code": "DUB02",
+  "Problem Record": "PRB0120124",
+  "Issue Description": "MROC - OTX issue in MR DUB02 01.05 (18) (Video) (Liffey)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-05-27",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 13,
+  "Region": "AMER",
+  "Building Code": "MEX02",
+  "Problem Record": "PRB0120239",
+  "Issue Description": "MR MEX02 20.214 (14) (Video) ((14) (Alebrijes))",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-05-28",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 14,
+  "Region": "APJ",
+  "Building Code": "BLR01",
+  "Problem Record": "PRB0120412",
+  "Issue Description": "MR BLR01 B0.R12 (8) (Video) (Kannur)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-05-29",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-05"
+ },
+ {
+  "Sl.No": 15,
+  "Region": "GERMANY",
+  "Building Code": "BON55",
+  "Problem Record": "PRB0122028",
+  "Issue Description": "DRR BON55 A4.17 (10) (Video, Collab) (Pathfinder)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-09",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 16,
+  "Region": "EMEA",
+  "Building Code": "CPT01",
+  "Problem Record": "PRB0122060",
+  "Issue Description": "MR CPT01 0.4 (10) (Video, Collab, BYOD) (Chardonnay)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-09",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 17,
+  "Region": "AMER",
+  "Building Code": "ATL02",
+  "Problem Record": "PRB0122092",
+  "Issue Description": "MROC - OTX issue in MR ATL02 2.6240 (10) (Video) (Hotlanta)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-10",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 18,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0122248",
+  "Issue Description": "DRR WDF21 FE.12 (16) (Video) (Demo Room).",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-10",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 19,
+  "Region": "GERMANY",
+  "Building Code": "WDF53",
+  "Problem Record": "PRB0123071",
+  "Issue Description": "MROC - OTX issue in MR WDF53 B1.01 (12) (Video) (Meeting Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-15",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 20,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0123076",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 D4.07 (10) (Video) (D1)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-15",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 21,
+  "Region": "GERMANY",
+  "Building Code": "WDF03",
+  "Problem Record": "PRB0123090",
+  "Issue Description": "MROC - OTX issue in SWR WDF03 A1.19 (4)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-15",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 22,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0123092",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 D4.06 (18) (Video) (D2)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-15",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 23,
+  "Region": "GERMANY",
+  "Building Code": "MUE03",
+  "Problem Record": "PRB0123095",
+  "Issue Description": "MROC - OTX issue in DRR MUE03 A1.04 (8) (Video, Collab) (Olympiapark - Meeting Seating)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-15",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 24,
+  "Region": "EMEA",
+  "Building Code": "CPT01",
+  "Problem Record": "PRB0123756",
+  "Issue Description": "MROC - OTX issue in MR CPT01 0.3 (12) (Video, Collab) (Colombard)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-19",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 25,
+  "Region": "AMER",
+  "Building Code": "MEX03",
+  "Problem Record": "PRB0124242",
+  "Issue Description": "MROC - OTX issue in MR MEX03 7.174 (5) (Video, BYOD) (Veracruz)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-06-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 26,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0124382",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 FE.07 (16) (Video) (Demo Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 27,
+  "Region": "EMEA",
+  "Building Code": "DUB02",
+  "Problem Record": "PRB0124362",
+  "Issue Description": "MROC - OTX issue in MR DUB02 01.01 (3) (Video) (Bann",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 28,
+  "Region": "GERMANY",
+  "Building Code": "WDF11",
+  "Problem Record": "PRB0124404",
+  "Issue Description": "MRC - OTX issue in MR WDF11 A2.06 (16) (Video, Collab) (Office)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 29,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0124569",
+  "Issue Description": "MRC - OTX issue in DRR WDF21 D4.10 (10) (Video) (D4)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 30,
+  "Region": "GERMANY",
+  "Building Code": "WDF04",
+  "Problem Record": "PRB0124576",
+  "Issue Description": "MRC - OTX issue in MR WDF04 C3.05A (14) (Video) (Meeting Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 31,
+  "Region": "AMER",
+  "Building Code": "SRM01",
+  "Problem Record": "PRB0124613",
+  "Issue Description": "MROC - OTX issue in MR SRM01 4.1082 (14) (Video) (Crater Lake)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-06-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 32,
+  "Region": "APJ",
+  "Building Code": "PVG10",
+  "Problem Record": "PRB0124662",
+  "Issue Description": "MROC - OTX issue in MR PVG10 47.11 (5) (Video) (Meeting Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 33,
+  "Region": "GERMANY",
+  "Building Code": "WDF49",
+  "Problem Record": "PRB0124919",
+  "Issue Description": "MROC - OTX issue in MRR WDF49 B3.22A (5) (Video)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-26",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 34,
+  "Region": "GERMANY",
+  "Building Code": "WDF49",
+  "Problem Record": "PRB0124922",
+  "Issue Description": "MROC - OTX issue in MRR WDF49 B3.07 (4) (Video)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-26",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 35,
+  "Region": "GERMANY",
+  "Building Code": "MUE03",
+  "Problem Record": "PRB0124929",
+  "Issue Description": "MROC - OTX issue in DRR MUE03 AE.31 (20) (Video, Collab) (Education - Meeting Seating)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-26",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 36,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0125259",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 AE.09 (12) (Video) (Presentation Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-06-29",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 37,
+  "Region": "APJ",
+  "Building Code": "TPE02",
+  "Problem Record": "PRB0125341",
+  "Issue Description": "MROC - OTX issue in MR TPE02 10.02 (4) (Video) (Xueshan)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-06-30",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-06"
+ },
+ {
+  "Sl.No": 38,
+  "Region": "EMEA",
+  "Building Code": "VIE01",
+  "Problem Record": "PRB0126955",
+  "Issue Description": "MROC - OTX issue in MR VIE01 7.270 (6) (Stadtpark) (updated)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-07-09",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-07"
+ },
+ {
+  "Sl.No": 39,
+  "Region": "EMEA",
+  "Building Code": "MIL04",
+  "Problem Record": "PRB0128615",
+  "Issue Description": "MROC - OTX issue in MR MIL04 03.346 (10) (Video, Collab) (Derby Club Meeting Room) (updated)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-07-20",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-07"
+ },
+ {
+  "Sl.No": 40,
+  "Region": "GERMANY",
+  "Building Code": "WDF19",
+  "Problem Record": "PRB0128849",
+  "Issue Description": "MROC - OTX issue in MRC - OTX issue in MRR WDF19 CE.07 (10) (Video) (Meeting Room) (updated)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-07-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-07"
+ },
+ {
+  "Sl.No": 41,
+  "Region": "AMER",
+  "Building Code": "MEX03",
+  "Problem Record": "PRB0129470",
+  "Issue Description": "MROC - OTX issue in MR MEX03 7.138 (18) (Video, BYOD) (Sayulita) (updated)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-07-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-07"
+ },
+ {
+  "Sl.No": 42,
+  "Region": "EMEA",
+  "Building Code": "OSL02",
+  "Problem Record": "PRB0129483",
+  "Issue Description": "MROC - OTX issue in MR OSL02 10.306 (5) (Video) (Dyna Fyr) (updated)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-07-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-07"
+ },
+ {
+  "Sl.No": 43,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0129820",
+  "Issue Description": "MROC - OTX issue in MR BER01 B02.26 (4) (Video) (Meeting Seating) (updated)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-07-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-07"
+ },
+ {
+  "Sl.No": 44,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0135822",
+  "Issue Description": "MROC - OTX issue in MR BER01 A06.04 (20) (Video) (Meeting Seating)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-13",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 45,
+  "Region": "GERMANY",
+  "Building Code": "DRE04",
+  "Problem Record": "PRB0135835",
+  "Issue Description": "MROC - OTX issue in MR DRE04 A03.14 (8) (Video) (Meeting Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-14",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 46,
+  "Region": "AMER",
+  "Building Code": "VAN03",
+  "Problem Record": "PRB0136251",
+  "Issue Description": "MRC - OTX issue in MR VAN03 1.A680 (9) (Video, Collab) (Capilano)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-08-17",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 47,
+  "Region": "EMEA",
+  "Building Code": "DUB05",
+  "Problem Record": "PRB0136287",
+  "Issue Description": "MRC - OTX issue in MR DUB05 1.02 (18) (Video) (Sugar Loaf)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-08-17",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 48,
+  "Region": "EMEA",
+  "Building Code": "HEL01",
+  "Problem Record": "PRB0136327",
+  "Issue Description": "MRC - OTX issue in MR HEL01 6042 (6) (Video) (Muumimamma)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-08-17",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 49,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0136506",
+  "Issue Description": "MROC - OTX issue in MR BER01 C03.05 (5) (Video) (Meeting Seating)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 50,
+  "Region": "APJ",
+  "Building Code": "DLN02",
+  "Problem Record": "PRB0136543",
+  "Issue Description": "MROC - OTX issue in MR DLN02 5.06 (6) (Video) (Meeting Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-08-18",
+  "PR State": "Fix in Progress",
+  "Remarks": "Awaiting the vendor's update regarding the repair schedule and resolution plan. Confirmation is still pending. ETA : Mid-October.",
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 51,
+  "Region": "AMER",
+  "Building Code": "TEM01",
+  "Problem Record": "PRB0136575",
+  "Issue Description": "MROC - OTX issue in MR TEM01 4.702 (5) (Video) (Staghorn)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 52,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0136599",
+  "Issue Description": "MROC - OTX issue in MRR WDF21 D1.10 (6) (Video)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 53,
+  "Region": "GERMANY",
+  "Building Code": "DUE04",
+  "Problem Record": "PRB0137143",
+  "Issue Description": "MROC - OTX issue in MR DUE04 A2.02 (14) (Video) (Cromford)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-08-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 55,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0137224",
+  "Issue Description": "MROC - OTX issue in MR BER01 A04.29 (3) (Audio, BYOD) (Meeting Cosy)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 54,
+  "Region": "EMEA",
+  "Building Code": "PRA05",
+  "Problem Record": "PRB0137203",
+  "Issue Description": "MROC - OTX issue in MR PRA05 B4.07 (6) (Video, BYOD) (HARVARD C)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 56,
+  "Region": "APJ",
+  "Building Code": "KUL04",
+  "Problem Record": "PRB0137265",
+  "Issue Description": "MROC - OTX issue in MR KUL04 29.103 (16) (Video) (Kuala Lumpur - External)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-22",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 57,
+  "Region": "AMER",
+  "Building Code": "SAO02",
+  "Problem Record": "PRB0137274",
+  "Issue Description": "MROC - OTX issue in MR SAO02 5.600 (10) (Video) (Bras)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-22",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 58,
+  "Region": "GERMANY",
+  "Building Code": "WDF19",
+  "Problem Record": "PRB0137281",
+  "Issue Description": "MROC - OTX issue in MRR WDF19 E3.07 (8) (Video) (Meeting Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-22",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 59,
+  "Region": "EMEA",
+  "Building Code": "DUB02",
+  "Problem Record": "PRB0137559",
+  "Issue Description": "MROC - OTX issue in MR DUB02 01.05 (18) (Video) (Liffey)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 60,
+  "Region": "AMER",
+  "Building Code": "PAL03",
+  "Problem Record": "PRB0137582",
+  "Issue Description": "MROC - OTX issue in MR PAL03 33.326 (4) (Video) (Salinas)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 61,
+  "Region": "EMEA",
+  "Building Code": "PRA05",
+  "Problem Record": "PRB0137675",
+  "Issue Description": "MROC - OTX issue in MR PRA05 A6.25 (14) (Video) (MT. BLANC)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 62,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0137726",
+  "Issue Description": "MROC - OTX issue in MR BER01 C08.07 (5) (Video) (Meeting Seating)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-08-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 63,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0137774",
+  "Issue Description": "MROC - OTX issue in MR BER01 A06.03 (28) (Video) (Meeting Seating)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 64,
+  "Region": "AMER",
+  "Building Code": "NYC02",
+  "Problem Record": "PRB0137968",
+  "Issue Description": "MROC - OTX issue in MR NYC02 49.330 (10) (Video, Collab) (Strawberry Fields)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-26",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 65,
+  "Region": "EMEA",
+  "Building Code": "PAR08",
+  "Problem Record": "PRB0138063",
+  "Issue Description": "MROC - OTX issue in MR PAR08 18.090 (8) (Video) (Meeting Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-27",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 66,
+  "Region": "AMER",
+  "Building Code": "SLE01",
+  "Problem Record": "PRB0138069",
+  "Issue Description": "MROC - OTX issue in MR SLE01 1D.09 (16) (Video) (Copacabana)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-08-27",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 67,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0138605",
+  "Issue Description": "MROC - OTX issue in MR BER01 A04.28 (6) (Video) (Alternative Workspace - no hard wall)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-08-31",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-08"
+ },
+ {
+  "Sl.No": 68,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0138845",
+  "Issue Description": "MROC - OTX issue in MR WDF21 G1.06 (16) (Video) (Meeting Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-01",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 69,
+  "Region": "APJ",
+  "Building Code": "BJG07",
+  "Problem Record": "PRB0140380",
+  "Issue Description": "MROC - OTX issue in MR BJG07 12.08 (6) (Video) (Meeting Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-09",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 70,
+  "Region": "APJ",
+  "Building Code": "MNL04",
+  "Problem Record": "PRB0140595",
+  "Issue Description": "MROC - OTX issue in MR MNL04 14.05 (8) (Video) (Meeting Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-10",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 71,
+  "Region": "EMEA",
+  "Building Code": "ROM02",
+  "Problem Record": "PRB0141001",
+  "Issue Description": "MROC - OTX issue in MR ROM02 04.202 (12) (Video) (Celio)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-12",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 72,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0141757",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 F4.15 (10) (Video) (F7)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-16",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 73,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0141839",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 FE.08 (16) (Video) (Demo Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-16",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 74,
+  "Region": "GERMANY",
+  "Building Code": "WDF49",
+  "Problem Record": "PRB0142063",
+  "Issue Description": "MROC - OTX issue in MRR WDF49 B3.07 (4) (Video) (Meeting Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-18",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 75,
+  "Region": "EMEA",
+  "Building Code": "LIS02",
+  "Problem Record": "PRB0142289",
+  "Issue Description": "MROC - OTX issue in MR LIS02 3.110 (4) (Video) (Leiria)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-19",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 76,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0142624",
+  "Issue Description": "DRR WDF21 FE.12 (16) (Video) (Demo Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-21",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 77,
+  "Region": "EMEA",
+  "Building Code": "RAA03",
+  "Problem Record": "PRB0142725",
+  "Issue Description": "MROC - OTX issue in MR RAA03 100 (4) (Video) (Meeting Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 78,
+  "Region": "EMEA",
+  "Building Code": "HEL01",
+  "Problem Record": "PRB0142736",
+  "Issue Description": "MROC - OTX issue in MR HEL01 6003 (26) (Video, Collab) (Halti Customer)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 79,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0142747",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 D4.15 (10) (Video) (D7)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-21",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 80,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0142756",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 E4.07 (18) (Video) (E1)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-21",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 82,
+  "Region": "AMER",
+  "Building Code": "BUE04",
+  "Problem Record": "PRB0142830",
+  "Issue Description": "MROC - OTX issue in MR BUE04 1.172 (8) (Audio, BYOD) (Obelisco)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-22",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 83,
+  "Region": "AMER",
+  "Building Code": "SAO02",
+  "Problem Record": "PRB0143066",
+  "Issue Description": "MROC - OTX issue in MR SAO02 6.500 (10) (Video) (Praia Grande)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-23",
+  "PR State": "Fix in Progress",
+  "Remarks": "Room Under Maintenance - Vendor Dependency - OSS Team Engaged with External Vendor - No ETA",
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 83,
+  "Region": "APJ",
+  "Building Code": "PVG07",
+  "Problem Record": "PRB0142771",
+  "Issue Description": "MROC - OTX issue in MR PVG07 C3.3 (6) (Meeting Room)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-21",
+  "PR State": "Fix in Progress",
+  "Remarks": "Team replaced Creaston Device and  MR will be in Monitoring phase. ETA : October 16th 2026",
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 84,
+  "Region": "EMEA",
+  "Building Code": "LON05",
+  "Problem Record": "PRB0143062",
+  "Issue Description": "MROC - OTX issue in DRR LON05 20.1110 (16) (Video) (Johnson)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 85,
+  "Region": "EMEA",
+  "Building Code": "LON01",
+  "Problem Record": "PRB0143079",
+  "Issue Description": "MROC - OTX issue in MR LON01 1.07 (6) (Video, Collab) (South Downs)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 86,
+  "Region": "EMEA",
+  "Building Code": "DUB02",
+  "Problem Record": "PRB0143334",
+  "Issue Description": "MROC - OTX issue in MR DUB02 02.05 (10) (Video) (Shannon)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-23",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 87,
+  "Region": "AMER",
+  "Building Code": "PAL03",
+  "Problem Record": "PRB0143373",
+  "Issue Description": "MROC - OTX issue in MR PAL03 34.426 (10) (Video) (Bali)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 88,
+  "Region": "GERMANY",
+  "Building Code": "WDF49",
+  "Problem Record": "PRB0143466",
+  "Issue Description": "MROC - OTX issue in MRR WDF49 B3.22A (5) (Video) (Meeting Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 89,
+  "Region": "EMEA",
+  "Building Code": "LON01",
+  "Problem Record": "PRB0143550",
+  "Issue Description": "MROC - OTX issue in MR LON01 1.01 (14) (Video, Collab) (Corfe Castle)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-24",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 91,
+  "Region": "APJ",
+  "Building Code": "BLR11",
+  "Problem Record": "PRB0143597",
+  "Issue Description": "MROC - OTX issue in MR BLR11 A4.R18 (12) (Video, Collab) (Graham Bell)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-25",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 92,
+  "Region": "EMEA",
+  "Building Code": "CAI05",
+  "Problem Record": "PRB0144168",
+  "Issue Description": "MROC - OTX issue in MR CAI05 1.F07 (21) (Video) (Aswan)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-28",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 92,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0143487",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 D4.07 (10) (Video) (D1)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-24",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 93,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0144186",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 FE.15 (16) (Video) (Demo Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-28",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 94,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0144203",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 D4.13 (10) (Video) (D5)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-28",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 95,
+  "Region": "EMEA",
+  "Building Code": "RAA03",
+  "Problem Record": "PRB0144336",
+  "Issue Description": "MROC - OTX issue in MR RAA03 455 (8) (Meeting Room)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-29",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 96,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0144337",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 F4.13 (10) (Video) (F5)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-29",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 97,
+  "Region": "GERMANY",
+  "Building Code": "BER01",
+  "Problem Record": "PRB0144338",
+  "Issue Description": "MROC - OTX issue in MR BER01 B02.23 (4) (Video) (Meeting Seating)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-29",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 98,
+  "Region": "EMEA",
+  "Building Code": "VIE01",
+  "Problem Record": "PRB0144428",
+  "Issue Description": "MROC - OTX issue in MR VIE01 08.18 (10) (Video, Collab) (Mozart)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-29",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 99,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0144526",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 F4.11 (10) (Video) (F3)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-29",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 100,
+  "Region": "AMER",
+  "Building Code": "VAN03",
+  "Problem Record": "PRB0144643",
+  "Issue Description": "MRoC - OTX issue in MR VAN03 1.J620 (6) (Video) (Strathcona)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-30",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 101,
+  "Region": "AMER",
+  "Building Code": "PAL02",
+  "Problem Record": "PRB0144645",
+  "Issue Description": "MROC - OTX issue in MR PAL02 22.63 (8) (Video) (Market)",
+  "Assignee": "Kyabarsi Archana",
+  "Created": "2026-09-30",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 102,
+  "Region": "EMEA",
+  "Building Code": "ZRH02",
+  "Problem Record": "PRB0144711",
+  "Issue Description": "MROC - OTX issue in DTR ZRH02 9.407 (6) (Video, BYOD) (Innovate)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-30",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 103,
+  "Region": "EMEA",
+  "Building Code": "HEL01",
+  "Problem Record": "PRB0144715",
+  "Issue Description": "MROC - OTX issue in MR HEL01 6197 (4) (Video) (Nuuskamuikkunen)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-30",
+  "PR State": "Resolved",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 104,
+  "Region": "GERMANY",
+  "Building Code": "WDF21",
+  "Problem Record": "PRB0144717",
+  "Issue Description": "MROC - OTX issue in DRR WDF21 D4.10 (10) (Video) (D4)",
+  "Assignee": "Pallavaraj M S",
+  "Created": "2026-09-30",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ },
+ {
+  "Sl.No": 105,
+  "Region": "EMEA",
+  "Building Code": "SOF04",
+  "Problem Record": "PRB0144789",
+  "Issue Description": "MROC - OTX issue in MR SOF04 3.34 (10) (Video) (Meeting Room)",
+  "Assignee": "Ganesh K Prabhu",
+  "Created": "2026-09-30",
+  "PR State": "Pending (RCA)",
+  "Remarks": null,
+  "Created Month": "2026-09"
+ }
+];
+
+const cols = Object.keys(DATA[0] || {});
+const chartRefs = {};
+const FONT='72,Arial,Helvetica,sans-serif';
+const THEMES = {
+  light:{resolved:'#1e3a8a',progress:'#d97706',rca:'#c0262d',bar:'#0a1128',line:'#0a1128',fill:'rgba(10,17,40,.08)',text:'#0a1128',muted:'#5b6785',grid:'#e6eaf4',gap:'#ffffff'},
+  dark: {resolved:'#5dc122',progress:'#ffa24d',rca:'#ff7b7b',bar:'#4da2ff',line:'#4da2ff',fill:'rgba(77,162,255,.18)',text:'#eaecee',muted:'#a9b4be',grid:'#323c47',gap:'#1d232a'}
+};
+let C = THEMES.light;
+Chart.defaults.font.family=FONT;
+
+function val(r,k){return r[k]===null||r[k]===undefined?'':String(r[k]);}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function roomOf(r){
+  const b=val(r,'Building Code'), d=val(r,'Issue Description'), i=d.indexOf(b);
+  if(!b||i<0) return null;
+  const tok=d.slice(i+b.length).trim().split(/\s+/)[0];
+  return tok?b+' '+tok:null;
+}
+function monthName(m){const [y,mo]=m.split('-');return new Date(+y,+mo-1,1).toLocaleString('en-US',{month:'short',year:'numeric'});}
+function filtered(){
+  const region=document.getElementById('region').value, assignee=document.getElementById('assignee').value,
+        state=document.getElementById('state').value, q=document.getElementById('search').value.toLowerCase().trim();
+  return DATA.filter(r=>(!region||val(r,'Region')===region)&&(!assignee||val(r,'Assignee')===assignee)&&(!state||val(r,'PR State')===state)&&
+    (!q||Object.values(r).some(v=>String(v??'').toLowerCase().includes(q))));
+}
+function counts(rows,key){const m={};rows.forEach(r=>{const k=val(r,key)||'Unspecified';m[k]=(m[k]||0)+1;});return m;}
+const topOf=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0];
+
+function draw(id,type,labels,datasets,extra={}){
+  if(chartRefs[id]) chartRefs[id].destroy();
+  const base={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,color:C.text,font:{family:FONT,size:12}}}},
+    scales:type==='doughnut'?{}:{x:{grid:{display:false},ticks:{color:C.muted}},y:{beginAtZero:true,ticks:{precision:0,color:C.muted},grid:{color:C.grid}}}};
+  chartRefs[id]=new Chart(document.getElementById(id).getContext('2d'),{type,data:{labels,datasets},options:Object.assign(base,extra)});
+}
+const stackScales=()=>({x:{stacked:true,grid:{display:false},ticks:{color:C.muted}},y:{stacked:true,beginAtZero:true,ticks:{precision:0,color:C.muted},grid:{color:C.grid}}});
+
+function ins(id,a){const e=document.getElementById('in_'+id);if(e)e.innerHTML=a.map(x=>`<li>${x}</li>`).join('');}
+function insights(rows,rec,months){
+  const ids=['stateChart','regionChart','monthStatusChart','monthChart','ownerChart','recurChart'];
+  if(!rows.length){ids.forEach(i=>ins(i,['No records match the current filters']));return;}
+  const t=rows.length,isOpen=r=>val(r,'PR State')!=='Resolved',open=rows.filter(isOpen);
+  const res=t-open.length,rca=open.filter(r=>val(r,'PR State')==='Pending (RCA)').length,fip=open.length-rca;
+  ins('stateChart',[`<b>${res}</b> of ${t} records resolved (${Math.round(res/t*100)}%)`,open.length?`${open.length} still open: ${rca} Pending RCA, ${fip} Fix in Progress`:'No open records']);
+  const ro=topOf(counts(open,'Region')),rt=topOf(counts(rows,'Region'));
+  ins('regionChart',[`${esc(rt[0])} has the most records (<b>${rt[1]}</b>)`,ro?`${esc(ro[0])} has the most open records (<b>${ro[1]}</b>)`:'No open records in any region']);
+  const pm=topOf(counts(open,'Created Month')),pk=topOf(counts(rows,'Created Month'));
+  ins('monthStatusChart',[`Peak month: ${monthName(pk[0])} with <b>${pk[1]}</b> records`,pm?`Most open records were created in ${monthName(pm[0])} (<b>${pm[1]}</b>)`:'All records are resolved']);
+  const cnt=m=>rows.filter(r=>val(r,'Created Month')===m).length,l=months[months.length-1],pv=months[months.length-2];
+  ins('monthChart',[pv?`${monthName(l)}: <b>${cnt(l)}</b> new records, ${cnt(l)>cnt(pv)?'up':cnt(l)<cnt(pv)?'down':'flat'} from ${cnt(pv)} in ${monthName(pv)}`:`${monthName(l)}: <b>${cnt(l)}</b> new records`,`Average ${(t/months.length).toFixed(1)} records per month`]);
+  const ot=topOf(counts(rows,'Assignee')),oo=topOf(counts(open,'Assignee'));
+  ins('ownerChart',[`${esc(ot[0])} owns the most records (<b>${ot[1]}</b>)`,oo?`${esc(oo[0])} holds the most open records (<b>${oo[1]}</b>)`:'No open records for any owner']);
+  ins('recurChart',rec.length?[`<b>${rec.length}</b> room${rec.length>1?'s':''} with repeat Problem Records`,`Most repeated: ${rec.slice(0,3).map(x=>esc(x[0])+' ('+x[1]+')').join(', ')}`]:['No room has more than one Problem Record']);
+}
+function ticker(rows){
+  const open=rows.filter(r=>val(r,'PR State')!=='Resolved');
+  const items=open.length?open.map(r=>`<span class="tk"><b>${esc(val(r,'Problem Record'))}</b> ${esc(roomOf(r)||val(r,'Building Code'))} &middot; ${esc(val(r,'PR State'))} &ndash; ${esc(val(r,'Remarks')||'No remarks recorded')}</span>`):['<span class="tk">No open Problem Records for the current filter</span>'];
+  const h=items.join('');
+  document.getElementById('ticker').innerHTML=`<div class="tk-track" style="animation-duration:${Math.max(40,items.length*9)}s"><div class="tk-run">${h}</div><div class="tk-run" aria-hidden="true">${h}</div></div>`;
+}
+
+let lastRows=[],dlgRows=[],lastFocus=null;
+const dlg=document.getElementById('dlg');
+const pillOf=v=>v==='Resolved'?'status-resolved':(v==='Fix in Progress'?'status-progress':'status-rca');
+function openDlg(title,body,foot){
+  dlg.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT"><div class="dlg-h"><h3 id="dlgT">${title}</h3><button class="x" aria-label="Close" onclick="closeDlg()">&times;</button></div><div class="dlg-b">${body}</div><div class="dlg-f">${foot||''}<button class="secondary" onclick="closeDlg()">Close</button></div></div>`;
+  lastFocus=document.activeElement;dlg.hidden=false;document.body.style.overflow='hidden';dlg.querySelector('.x').focus();
+}
+function closeDlg(){if(dlg.hidden)return;dlg.hidden=true;dlg.innerHTML='';document.body.style.overflow='';if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+function showState(state){
+  const rows=filtered().filter(r=>!state||val(r,'PR State')===state);dlgRows=rows;
+  const body=rows.length?`<div class="tablewrap" style="max-height:60vh"><table><thead><tr><th>Problem Record</th><th>Room</th><th>Region</th><th>Owner</th><th>Created</th><th>State</th></tr></thead><tbody>${rows.map(r=>`<tr style="cursor:default"><td><b>${esc(val(r,'Problem Record'))}</b></td><td>${esc(roomOf(r)\vert{}\vert{}val(r,'Building Code'))}</td><td>${esc(val(r,'Region'))}</td><td>${esc(val(r,'Assignee'))}</td><td>${esc(val(r,'Created'))}</td><td><span class="status-pill ${pillOf(val(r,'PR State'))}">${esc(val(r,'PR State'))}</span></td></tr>`).join('')}</tbody></table></div>`:'<p>No records match the current filters.</p>';
+  openDlg(`${esc(state||'All Problem Records')} &mdash; ${rows.length} record${rows.length===1?'':'s'}`,body,rows.length?'<button onclick="downloadCSV(dlgRows)">Export CSV</button>':'');
+}
+function showRecord(i){
+  const r=lastRows[i];if(!r)return;
+  const f=(k,v,full)=>`<div${full?' class="full"':''}><dt>${k}</dt><dd>${v}</dd></div>`;
+  openDlg(`${esc(val(r,'Problem Record'))}`,`<dl class="kv">${f('State',`<span class="status-pill ${pillOf(val(r,'PR State'))}">${esc(val(r,'PR State'))}</span>`)}${f('Owner',esc(val(r,'Assignee')))}${f('Region',esc(val(r,'Region')))}${f('Building / Room',esc(val(r,'Building Code'))+' &bull; '+esc(roomOf(r)||'n/a'))}${f('Created',esc(val(r,'Created')))}${f('Created month',esc(monthName(val(r,'Created Month'))))}${f('Issue description',esc(val(r,'Issue Description')),1)}${f('Remarks',esc(val(r,'Remarks')||'No remarks recorded'),1)}</dl>`,'');
+}
+function closeMenus(){document.querySelectorAll('.menu').forEach(m=>m.hidden=true);document.querySelectorAll('.mbtn').forEach(b=>b.setAttribute('aria-expanded','false'));}
+function toggleMenu(b){const m=b.nextElementSibling,was=!m.hidden;closeMenus();if(!was){m.hidden=false;b.setAttribute('aria-expanded','true');m.querySelector('[role=menuitem]').focus();}}
+function go(id){closeMenus();document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});}
+function act(a){closeMenus();if(a==='csv')downloadCSV();else if(a==='print')window.print();else if(a==='reset')resetFilters();}
+document.addEventListener('click',e=>{if(!e.target.closest('.mb'))closeMenus();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeDlg();closeMenus();return;}
+  const m=e.target.closest&&e.target.closest('.menu');
+  if(m&&(e.key==='ArrowDown'||e.key==='ArrowUp')){e.preventDefault();const it=[...m.querySelectorAll('[role=menuitem]')],i=it.indexOf(document.activeElement);it[(i+(e.key==='ArrowDown'?1:-1)+it.length)%it.length].focus();}
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.kpi,tbody tr')){e.preventDefault();e.target.click();}
+});
+dlg.addEventListener('click',e=>{if(e.target===dlg)closeDlg();});
+['','Resolved','Fix in Progress','Pending (RCA)'].forEach((st,i)=>{const k=document.querySelectorAll('.kpi')[i];k.tabIndex=0;k.setAttribute('role','button');k.addEventListener('click',()=>showState(st));});
+document.getElementById('tbody').addEventListener('click',e=>{const tr=e.target.closest('tr');if(tr)showRecord(+tr.dataset.i);});
+function render(){
+  const rows=filtered(), total=rows.length;lastRows=rows;
+  const n=s=>rows.filter(r=>val(r,'PR State')===s).length;
+  document.getElementById('kTotal').textContent=total;
+  document.getElementById('kResolved').textContent=n('Resolved');
+  document.getElementById('kInProgress').textContent=n('Fix in Progress');
+  document.getElementById('kRca').textContent=n('Pending (RCA)');
+
+  const st=counts(rows,'PR State'), stLabels=Object.keys(st);
+  const stColor={'Resolved':C.resolved,'Fix in Progress':C.progress,'Pending (RCA)':C.rca};
+  draw('stateChart','doughnut',stLabels,[{data:Object.values(st),backgroundColor:stLabels.map(l=>stColor[l]||'#74869b'),borderColor:C.gap,borderWidth:2}],{cutout:'62%'});
+
+  const regions=[...new Set(rows.map(r=>val(r,'Region')||'Unspecified'))].sort();
+  draw('regionChart','bar',regions,[
+    {label:'Resolved',data:regions.map(g=>rows.filter(r=>(val(r,'Region')||'Unspecified')===g&&val(r,'PR State')==='Resolved').length),backgroundColor:C.bar},
+    {label:'Fix in Progress / Pending RCA',data:regions.map(g=>rows.filter(r=>(val(r,'Region')||'Unspecified')===g&&val(r,'PR State')!=='Resolved').length),backgroundColor:C.progress}
+  ],{scales:stackScales()});
+
+  const months=[...new Set(rows.map(r=>val(r,'Created Month')))].filter(Boolean).sort();
+  const cell=(m,s)=>rows.filter(r=>val(r,'Created Month')===m&&val(r,'PR State')===s).length;
+  draw('monthStatusChart','bar',months.map(monthName),[
+    {label:'Resolved',data:months.map(m=>cell(m,'Resolved')),backgroundColor:C.resolved,borderRadius:4},
+    {label:'Fix in Progress',data:months.map(m=>cell(m,'Fix in Progress')),backgroundColor:C.progress,borderRadius:4},
+    {label:'Pending (RCA)',data:months.map(m=>cell(m,'Pending (RCA)')),backgroundColor:C.rca,borderRadius:4}
+  ],{scales:stackScales()});
+
+  let tR=0,tF=0,tP=0;
+  let body=months.map(m=>{
+    const a=cell(m,'Resolved'),b=cell(m,'Fix in Progress'),c=cell(m,'Pending (RCA)');
+    tR+=a;tF+=b;tP+=c;
+    return `<tr><td><b>${monthName(m)}</b></td><td class="num">${a}</td><td class="num">${b}</td><td class="num">${c}</td><td class="num"><b>${a+b+c}</b></td></tr>`;
+  }).join('');
+  body+=`<tr class="total-row"><td>Total</td><td class="num">${tR}</td><td class="num">${tF}</td><td class="num">${tP}</td><td class="num">${tR+tF+tP}</td></tr>`;
+  document.getElementById('monthBody').innerHTML=body;
+
+  draw('monthChart','line',months.map(monthName),[{label:'Problems Created',data:months.map(m=>rows.filter(r=>val(r,'Created Month')===m).length),
+    borderColor:C.line,backgroundColor:C.fill,fill:true,tension:.3,borderWidth:3,pointRadius:4,pointBackgroundColor:C.line}]);
+
+  const ow=counts(rows,'Assignee');
+  draw('ownerChart','bar',Object.keys(ow),[{label:'Assigned Problems',data:Object.values(ow),backgroundColor:C.bar,borderRadius:6}],{indexAxis:'y'});
+
+  const rc={};
+  rows.forEach(r=>{const k=roomOf(r);if(k)rc[k]=(rc[k]||0)+1;});
+  const rec=Object.entries(rc).filter(([,v])=>v>1).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  document.getElementById('recurWrap').style.height=Math.max(200,rec.length*34+80)+'px';
+  document.getElementById('recurHint').textContent=rec.length
+    ? rec.length+' meeting room'+(rec.length>1?'s have':' has')+' more than one Problem Record ('+rec.reduce((s,x)=>s+x[1],0)+' records in total)'
+    : 'No meeting room has more than one Problem Record for the current filter';
+  draw('recurChart','bar',rec.map(x=>x[0]),[{label:'Problem Records',data:rec.map(x=>x[1]),backgroundColor:C.bar,borderRadius:6}],
+    {indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0,stepSize:1,color:C.muted},grid:{color:C.grid}},y:{grid:{display:false},ticks:{color:C.text}}}});
+
+  insights(rows,rec,months);ticker(rows);
+  const pill=v=>v==='Resolved'?'status-resolved':(v==='Fix in Progress'?'status-progress':'status-rca');
+  const openRows=rows.filter(r=>val(r,'PR State')!=='Resolved');
+  document.getElementById('openList').innerHTML=openRows.length?openRows.map(r=>`<li><b>${esc(val(r,'Problem Record'))}</b><span class="status-pill ${pill(val(r,'PR State'))}">${esc(val(r,'PR State'))}</span><span>${esc(roomOf(r)||val(r,'Building Code'))} &bull; ${esc(val(r,'Assignee'))}</span><span class="rm">${esc(val(r,'Remarks')||'No remarks recorded')}</span></li>`).join(''):'<li>No open Problem Records for the current filter</li>';
+
+  document.getElementById('thead').innerHTML='<tr>'+cols.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr>';
+  document.getElementById('tbody').innerHTML=rows.slice(0,500).map((r,i)=>'<tr data-i="'+i+'" tabindex="0">'+cols.map(c=>{
+    const v=val(r,c);
+    if(c==='PR State') return `<td><span class="status-pill ${pill(v)}">${esc(v)}</span></td>`;
+    return `<td>${esc(v)}</td>`;}).join('')+'</tr>').join('');
+  document.getElementById('rowCount').textContent=rows.length+' records'+(rows.length>500?' (showing first 500)':'')+' \u00b7 Select a row for details';
+}
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  C=THEMES[t];
+  document.getElementById('themeBtn').textContent=t==='light'?'Evening Horizon':'Morning Horizon';
+  render();
+}
+function toggleTheme(){
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  try{localStorage.setItem('mroc-theme-sap',t);}catch(e){}
+  applyTheme(t);
+}
+function resetFilters(){['region','assignee','state','search'].forEach(id=>document.getElementById(id).value='');render();}
+function downloadCSV(list){
+  const rows=list||filtered(), q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv=[cols.map(q).join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='mroc_problem_management_report.csv';a.click();URL.revokeObjectURL(a.href);
+}
+['region','assignee','state'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+document.getElementById('search').addEventListener('input',render);
+let saved='light';try{saved=localStorage.getItem('mroc-theme-sap')||'light';}catch(e){}
+applyTheme(saved==='dark'?'dark':'light');
+</script>
+</body>
+</html>
